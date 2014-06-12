@@ -1,0 +1,23 @@
+#!/bin/bash
+# Absolute path to this script, e.g. /home/user/bin/foo.sh
+SCRIPT=$(readlink -f $0)
+# Absolute path this script is in, thus /home/user/bin
+SCRIPTPATH=$(dirname $SCRIPT)
+echo "Current directory:"
+echo $SCRIPTPATH
+
+PHPUNITPAT=$SCRIPTPATH/../../../tests/phpunit/phpunit.php
+echo "PHPUNIT PATH:"
+echo $PHPUNITPAT
+
+EXTPATH=$SCRIPTPATH/phpunit/AllTests.php
+echo "EXT PATH:"
+echo $EXTPATH
+
+SUITEPATH=$SCRIPTPATH/../../../extensions/SemanticQueryInterface/tests/phpunit/suite.xml
+echo "EXT SUITEPATH:"
+echo $SUITEPATH
+
+php $PHPUNITPAT --configuration $SUITEPATH $EXTPATH
+
+#php $SCRIPTPATH/../../../tests/phpunit/phpunit.php --configuration extensions/SemanticQueryInterface/tests/phpunit/suite.xml $SCRIPTPATH\phpunit\AllTests.php
