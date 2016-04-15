@@ -11,13 +11,13 @@ use SMW\Subobject;
  */
 class SemanticQueryInterface {
 
-	/** @var  \SMWStore */
+	/** @var \SMWStore */
 	protected $store;
-	/** @var  Array */
+	/** @var  array */
 	protected $config;
 	/** @var  string */
 	protected $page;
-	/** @var  Array[] */
+	/** @var  array[] */
 	protected $conditions;
 	/** @var  string[] */
 	protected $printouts;
@@ -27,6 +27,8 @@ class SemanticQueryInterface {
 	protected $limit;
 	/** @var  int */
 	protected $offset;
+	/** @var string */
+	protected $sortProperties;
 
 	/** @var \SMWQueryResult */
 	protected $result;
@@ -52,6 +54,8 @@ class SemanticQueryInterface {
 		$this->limit = 1000;
 		$this->offset = 0;
 		$this->result = null;
+		$this->sort = null;
+		$this->sortProperties = null;
 		/* Configuration Default */
 		$this->config = array(
 			//Fetch only last (first) property value instead of one element array
@@ -73,22 +77,43 @@ class SemanticQueryInterface {
 	/**
 	 * Set query results offset
 	 * @param $offset
+	 * @return $this
 	 */
 	public function offset( $offset ) {
 		$this->offset = $offset;
+		return $this;
 	}
 
 	/**
 	 * Set query results limit
 	 * @param $limit
+	 * @return $this
 	 */
 	public function limit( $limit ) {
 		$this->limit = $limit;
+		return $this;
+	}
+
+	/**
+	 * Set query sorting subject property
+	 * @param string $sortProperty
+	 * @param string $direction
+	 * @return $this
+	 */
+	public function sort( $sortProperty = '', $direction = 'ASC' )
+	{
+		$sortProperty = SemanticUtils::stringToDbkey( $sortProperty );
+		$this->sortProperties[$sortProperty] = $direction;
+		// Add property to printouts
+		if( $sortProperty != '' && !in_array( $sortProperty, $this->printouts ) ) {
+			$this->printouts[] = $sortProperty;
+		}
+		return $this;
 	}
 
 	/**
 	 * Apply some condition to query.
-	 * @param Array $condition should be array like (propertyName) | (propertyName,propertyValue)
+	 * @param array|string $condition should be array like (propertyName) | (propertyName,propertyValue)
 	 * @param null $conditionValue
 	 * @return $this
 	 */
@@ -139,6 +164,7 @@ class SemanticQueryInterface {
 	/**
 	 * Sets query limitation to specified page (title as string)
 	 * @param $page
+	 * @param bool $flatResult
 	 * @return $this
 	 */
 	public function from( $page, $flatResult = false ) {
@@ -158,6 +184,10 @@ class SemanticQueryInterface {
 		$query = new \SMWQuery( $queryDescription );
 		$query->setOffset( $this->offset );
 		$query->setLimit( $this->limit );
+		if( $this->sortProperties ) {
+			$query->sort = true;
+			$query->sortkeys = $this->sortProperties;
+		}
 		$this->result = $this->store->getQueryResult( $query );
 		return $this;
 	}
