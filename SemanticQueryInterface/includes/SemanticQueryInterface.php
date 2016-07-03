@@ -2,8 +2,14 @@
 
 namespace SQI;
 
+use OOUI\Exception;
 use SMW\DataValueFactory;
 use SMW\Subobject;
+use SMWDataItem;
+use SMWDIError;
+use SMWErrorValue as ErrorValue;
+use SMWPropertyValue;
+use SMWDataValue as DataValue;
 
 /**
  * Class SemanticQueryInterface
@@ -358,9 +364,10 @@ class SemanticQueryInterface {
 			$valueDescription = new \SMWThingDescription();
 			if( isset($condition[1]) ) {
 				//SMW >= 1.9
-				if( class_exists('SMW\DataValueFactory') ) {
-					/** @var \SMWDataValue $value */
-					$value = DataValueFactory::newPropertyValue( $condition[0], $condition[1] );
+				if( class_exists('SMW\DataValueFactory') )
+				{
+					// In some cases we will receive error probably because of PHP-version
+					$value = $this->newPropertyValue( $condition[0], $condition[1] );
 				}else{
 				//SMW < 1.9
 					$prop = \SMWDIProperty::newFromUserLabel($condition[0]);
@@ -420,6 +427,75 @@ class SemanticQueryInterface {
 		}
 
 		return $queryDescription;
+	}
+
+	/*
+	 * Merged from DataValueFactory
+	 */
+
+	public function newPropertyValue( $propertyName, $valueString,
+		$caption = false, \SMW\DIWikiPage $contextPage = null ) {
+
+		// Enforce upper case for the first character on annotations that are used
+		// within the property namespace in order to avoid confusion when
+		// $wgCapitalLinks setting is disabled
+		if ( $contextPage !== null && $contextPage->getNamespace() === SMW_NS_PROPERTY ) {
+			$propertyName = ucfirst( $propertyName );
+		}
+
+		$propertyDV = SMWPropertyValue::makeUserProperty( $propertyName );
+
+		if ( !$propertyDV->isValid() ) {
+			return $propertyDV;
+		}
+
+		if ( !$propertyDV->canUse() ) {
+			return new \SMW\ErrorValue(
+				$propertyDV->getPropertyTypeID(),
+				wfMessage( 'smw-datavalue-property-restricted-use', $propertyName )->inContentLanguage()->text(),
+				$valueString,
+				$caption
+			);
+		}
+
+		$propertyDI = $propertyDV->getDataItem();
+
+		if ( $propertyDI instanceof \SMW\SMWDIError ) {
+			return $propertyDV;
+		}
+
+		if ( $propertyDI instanceof \SMW\DIProperty && !$propertyDI->isInverse() ) {
+			$dataValue = DataValueFactory::newPropertyObjectValue(
+				$propertyDI,
+				$valueString,
+				$caption,
+				$contextPage
+			);
+		} elseif ( $propertyDI instanceof \SMW\DIProperty && $propertyDI->isInverse() ) {
+			$dataValue = new \SMW\ErrorValue( $propertyDV->getPropertyTypeID(),
+				wfMessage( 'smw_noinvannot' )->inContentLanguage()->text(),
+				$valueString,
+				$caption
+			);
+		} else {
+			$dataValue = new \SMW\ErrorValue(
+				$propertyDV->getPropertyTypeID(),
+				wfMessage( 'smw-property-name-invalid', $propertyName )->inContentLanguage()->text(),
+				$valueString,
+				$caption
+			);
+		}
+
+		if ( $dataValue->isValid() && !$dataValue->canUse() ) {
+			$dataValue = new \SMW\ErrorValue(
+				$propertyDV->getPropertyTypeID(),
+				wfMessage( 'smw-datavalue-restricted-use', implode( ',', $datavalue->getErrors() ) )->inContentLanguage()->text(),
+				$valueString,
+				$caption
+			);
+		}
+
+		return $dataValue;
 	}
 
 }
