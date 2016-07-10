@@ -119,15 +119,18 @@ class SemanticQueryInterface {
 
 	/**
 	 * Apply some condition to query.
+	 *
 	 * @param array|string $condition should be array like (propertyName) | (propertyName,propertyValue)
-	 * @param null $conditionValue
+	 * @param null         $conditionValue
+	 * @param null         $comparator
+	 *
 	 * @return $this
 	 */
-	public function condition( $condition, $conditionValue = null ) {
+	public function condition( $condition, $conditionValue = null, $comparator = null ) {
 		if(!is_array($condition)) {
 			if( $conditionValue !== null ) {
 				//Lets handle free-way calling, why not?
-				$condition = array( $condition, $conditionValue );
+				$condition = array( $condition, $conditionValue, $comparator );
 			}else{
 				$condition = array( $condition );
 			}
@@ -362,6 +365,13 @@ class SemanticQueryInterface {
 		foreach($this->conditions as $condition) {
 			$property = \SMWDIProperty::newFromUserLabel($condition[0]);
 			$valueDescription = new \SMWThingDescription();
+
+			// Handle custom comparator value
+			$comparator = SMW_CMP_EQ;
+			if( count($condition) > 2 && $condition[2] !== null ) {
+				$comparator = $condition[2];
+			}
+
 			if( isset($condition[1]) ) {
 				//SMW >= 1.9
 				if( class_exists('SMW\DataValueFactory') )
@@ -373,7 +383,7 @@ class SemanticQueryInterface {
 					$prop = \SMWDIProperty::newFromUserLabel($condition[0]);
 					$value = \SMWDataValueFactory::newPropertyObjectValue( $prop, $condition[1] );
 				}
-				$valueDescription = new \SMWValueDescription( $value->getDataItem() );
+				$valueDescription = new \SMWValueDescription( $value->getDataItem(), null, $comparator );
 			}
 			$description = new \SMWSomeProperty( $property, $valueDescription );
 			//Add condition properties to printouts
