@@ -140,6 +140,102 @@ class SemanticQueryInterface {
 	}
 
 	/**
+	 * Apply LIKE condition to query, where $value can contain '*' and '?' wildcard characters
+	 *
+	 * @param string    $property
+	 * @param string    $value
+	 *
+	 * @return SemanticQueryInterface
+	 */
+	public function like( $property, $value ) {
+		return $this->condition( $property, $value, SMW_CMP_LIKE );
+	}
+
+	/**
+	 * Apply default equality comparison to query
+	 *
+	 * @param string    $property
+	 * @param string    $value
+	 *
+	 * @return SemanticQueryInterface
+	 */
+	public function equals( $property, $value ) {
+		return $this->condition( $property, $value );
+	}
+
+	/**
+	 * Apply NOT LIKE condition to query, where $value can contain '*' and '?' wildcard characters
+	 *
+	 * @param string    $property
+	 * @param string    $value
+	 *
+	 * @return SemanticQueryInterface
+	 */
+	public function notLike( $property, $value ) {
+		return $this->condition( $property, $value, SMW_CMP_NLKE );
+	}
+
+	/**
+	 * Apply NOT EQUAL condition to query
+	 *
+	 * @param string    $property
+	 * @param string    $value
+	 *
+	 * @return SemanticQueryInterface
+	 */
+	public function not( $property, $value ) {
+		return $this->condition( $property, $value, SMW_CMP_NEQ );
+	}
+
+	/**
+	 * Apply LESS condition to query ( should be used with numeric/dates properties )
+	 *
+	 * @param string $property
+	 * @param string $value
+	 *
+	 * @return SemanticQueryInterface
+	 */
+	public function less( $property, $value ) {
+		return $this->condition( $property, $value, SMW_CMP_LESS );
+	}
+
+	/**
+	 * Apply LESS or EQUAL condition to query ( should be used with numeric/dates properties )
+	 *
+	 * @param string $property
+	 * @param string $value
+	 *
+	 * @return SemanticQueryInterface
+	 */
+	public function lessOrEqual( $property, $value ) {
+		return $this->condition( $property, $value, SMW_CMP_LEQ );
+	}
+
+	/**
+	 * Apply GREATER condition to query ( should be used with numeric/dates properties )
+	 *
+	 * @param string $property
+	 * @param string $value
+	 *
+	 * @return SemanticQueryInterface
+	 */
+	public function greater( $property, $value ) {
+		return $this->condition( $property, $value, SMW_CMP_GRTR );
+	}
+
+	/**
+	 * Apply GREATER or EQUAL condition to query ( should be used with numeric/dates properties )
+	 *
+	 * @param string $property
+	 * @param string $value
+	 *
+	 * @return SemanticQueryInterface
+	 */
+	public function greaterOrEqual( $property, $value ) {
+		return $this->condition( $property, $value, SMW_CMP_GEQ );
+	}
+
+	/**
 	 * Adds property to be fetched and printed out, use * to print out all properties
 	 * @param $printout
 	 * @return $this
