@@ -23,6 +23,8 @@ class SemanticQueryInterface {
 	protected $config;
 	/** @var  string */
 	protected $page;
+	/** @var int */
+	protected $namespace;
 	/** @var  array[] */
 	protected $conditions;
 	/** @var  string[] */
@@ -42,9 +44,12 @@ class SemanticQueryInterface {
 	/**
 	 * Creates new class instance.
 	 * Config array can be passed to override default options, array keys available:
-	 * flat_prop_vals (false) - Fetch only last (first) property value instead of one element array;
-	 * fetch_default_properties (true) - Fetch default semantic properties (like category) for every subject page;
-	 * fetch_all_properties (false) - Fetch all subject properties and their values by default;
+	 * flat_prop_vals (false) - Fetch only last (first) property value instead of one element
+	 * array;
+	 * fetch_default_properties (true) - Fetch default semantic properties (like category) for
+	 * every subject page; fetch_all_properties (false) - Fetch all subject properties and their
+	 * values by default;
+	 *
 	 * @param null $config
 	 */
 	function __construct( $config = null ) {
@@ -73,7 +78,7 @@ class SemanticQueryInterface {
 			//Flat results array: Only one (first) result will be returned instead of results array
 			'flat_result_array' => false
 		);
-		if( $config !== null ) {
+		if ( $config !== null ) {
 			$this->config = array_merge( $this->config, $config );
 		}
 		/* Semantic store */
@@ -82,7 +87,9 @@ class SemanticQueryInterface {
 
 	/**
 	 * Set query results offset
+	 *
 	 * @param $offset
+	 *
 	 * @return $this
 	 */
 	public function offset( $offset ) {
@@ -92,7 +99,9 @@ class SemanticQueryInterface {
 
 	/**
 	 * Set query results limit
+	 *
 	 * @param $limit
+	 *
 	 * @return $this
 	 */
 	public function limit( $limit ) {
@@ -102,16 +111,17 @@ class SemanticQueryInterface {
 
 	/**
 	 * Set query sorting subject property
+	 *
 	 * @param string $sortProperty
 	 * @param string $direction
+	 *
 	 * @return $this
 	 */
-	public function sort( $sortProperty = '', $direction = 'ASC' )
-	{
+	public function sort( $sortProperty = '', $direction = 'ASC' ) {
 		$sortProperty = SemanticUtils::stringToDbkey( $sortProperty );
-		$this->sortProperties[$sortProperty] = $direction;
+		$this->sortProperties[ $sortProperty ] = $direction;
 		// Add property to printouts
-		if( $sortProperty != '' && !in_array( $sortProperty, $this->printouts ) ) {
+		if ( $sortProperty != '' && !in_array( $sortProperty, $this->printouts ) ) {
 			$this->printouts[] = $sortProperty;
 		}
 		return $this;
@@ -120,18 +130,19 @@ class SemanticQueryInterface {
 	/**
 	 * Apply some condition to query.
 	 *
-	 * @param array|string $condition should be array like (propertyName) | (propertyName,propertyValue)
-	 * @param null         $conditionValue
-	 * @param null         $comparator
+	 * @param array|string $condition should be array like (propertyName) |
+	 *     (propertyName,propertyValue)
+	 * @param null $conditionValue
+	 * @param null $comparator
 	 *
 	 * @return $this
 	 */
 	public function condition( $condition, $conditionValue = null, $comparator = null ) {
-		if(!is_array($condition)) {
-			if( $conditionValue !== null ) {
+		if ( !is_array( $condition ) ) {
+			if ( $conditionValue !== null ) {
 				//Lets handle free-way calling, why not?
 				$condition = array( $condition, $conditionValue, $comparator );
-			}else{
+			} else {
 				$condition = array( $condition );
 			}
 		}
@@ -142,8 +153,8 @@ class SemanticQueryInterface {
 	/**
 	 * Apply LIKE condition to query, where $value can contain '*' and '?' wildcard characters
 	 *
-	 * @param string    $property
-	 * @param string    $value
+	 * @param string $property
+	 * @param string $value
 	 *
 	 * @return SemanticQueryInterface
 	 */
@@ -154,8 +165,8 @@ class SemanticQueryInterface {
 	/**
 	 * Apply default equality comparison to query
 	 *
-	 * @param string    $property
-	 * @param string    $value
+	 * @param string $property
+	 * @param string $value
 	 *
 	 * @return SemanticQueryInterface
 	 */
@@ -166,8 +177,8 @@ class SemanticQueryInterface {
 	/**
 	 * Apply NOT LIKE condition to query, where $value can contain '*' and '?' wildcard characters
 	 *
-	 * @param string    $property
-	 * @param string    $value
+	 * @param string $property
+	 * @param string $value
 	 *
 	 * @return SemanticQueryInterface
 	 */
@@ -178,8 +189,8 @@ class SemanticQueryInterface {
 	/**
 	 * Apply NOT EQUAL condition to query
 	 *
-	 * @param string    $property
-	 * @param string    $value
+	 * @param string $property
+	 * @param string $value
 	 *
 	 * @return SemanticQueryInterface
 	 */
@@ -237,20 +248,22 @@ class SemanticQueryInterface {
 
 	/**
 	 * Adds property to be fetched and printed out, use * to print out all properties
+	 *
 	 * @param $printout
+	 *
 	 * @return $this
 	 */
 	public function printout( $printout ) {
-		if( $printout == '*' ) {
+		if ( $printout == '*' ) {
 			$this->config['fetch_all_properties'] = true;
 			return $this;
 		}
-		if( is_array($printout) ) {
+		if ( is_array( $printout ) ) {
 			foreach ( $printout as $pt ) {
 				$this->printouts[] = $pt;
 			}
 
-		}else{
+		} else {
 			$this->printouts[] = $printout;
 		}
 		return $this;
@@ -258,25 +271,31 @@ class SemanticQueryInterface {
 
 	/**
 	 * Sets query limitation to category(ies)
+	 *
 	 * @param $category
+	 *
 	 * @return $this
 	 */
 	public function category( $category ) {
-		$this->categories[] = SemanticUtils::stringToDbkey($category);
+		$this->categories[] = SemanticUtils::stringToDbkey( $category );
 		return $this;
 	}
 
 	/**
 	 * Sets query limitation to specified page (title as string)
+	 *
 	 * @param $page
+	 * @param int $namespace
 	 * @param bool $flatResult
+	 *
 	 * @return $this
 	 */
-	public function from( $page, $flatResult = false ) {
-		if( $flatResult ) {
+	public function from( $page, $namespace = NS_MAIN, $flatResult = false ) {
+		if ( $flatResult ) {
 			$this->config['flat_result_array'] = true;
 		}
-		$this->page = SemanticUtils::stringToDbkey($page);
+		$this->page = SemanticUtils::stringToDbkey( $page );
+		$this->namespace = $namespace;
 		return $this;
 	}
 
@@ -289,7 +308,7 @@ class SemanticQueryInterface {
 		$query = new \SMWQuery( $queryDescription );
 		$query->setOffset( $this->offset );
 		$query->setLimit( $this->limit );
-		if( $this->sortProperties ) {
+		if ( $this->sortProperties ) {
 			$query->sort = true;
 			$query->sortkeys = $this->sortProperties;
 		}
@@ -302,7 +321,7 @@ class SemanticQueryInterface {
 	 * @return \SMWQueryResult
 	 */
 	public function getResult() {
-		if( $this->result === null ) {
+		if ( $this->result === null ) {
 			$this->execute();
 		}
 		return $this->result;
@@ -313,7 +332,7 @@ class SemanticQueryInterface {
 	 * @return int
 	 */
 	public function count() {
-		if( $this->result === null ) {
+		if ( $this->result === null ) {
 			$this->execute();
 		}
 		return $this->result->getCount();
@@ -324,19 +343,19 @@ class SemanticQueryInterface {
 	 * @return \Title[]
 	 */
 	public function getResultSubjects() {
-		if( $this->result === null ) {
+		if ( $this->result === null ) {
 			$this->execute();
 		}
 		$subjects = array();
 		$result = $this->result->getResults();
 		/** @var \SMWDIWikiPage $subject */
-		foreach($result as $subject) {
+		foreach ( $result as $subject ) {
 			$title = $subject->getTitle();
-			if( $subject->getSubobjectName() != '' ) {
+			if ( $subject->getSubobjectName() != '' ) {
 				$subjects[] = $title;
 				continue;
 			}
-			if(!in_array( $title, $subjects )) {
+			if ( !in_array( $title, $subjects ) ) {
 				$subjects[] = $title;
 			}
 		}
@@ -347,12 +366,14 @@ class SemanticQueryInterface {
 	/**
 	 * Main method to get query results. Converts raw semantic result to human readable array.
 	 * //TODO: This method need slight refactoring about array keys organisation
+	 *
 	 * @param bool $stringifyPropValues cast all properties values types to string
+	 *
 	 * @return array
 	 */
 	public function toArray( $stringifyPropValues = false ) {
 
-		if( $this->result === null ) {
+		if ( $this->result === null ) {
 			$this->execute();
 		}
 
@@ -363,22 +384,23 @@ class SemanticQueryInterface {
 
 		//Fill array with subjects
 		$resultSubjects = $this->getResultSubjects();
-		foreach($resultSubjects as $title) {
+		foreach ( $resultSubjects as $title ) {
 			$properties = array();
 
 			//TODO: There should be more beautiful way to form array keys ...
-			$arrayKey = $title->getArticleID() . ( ($title->getFragment()) ? '#'.trim($title->getFragment(),'_ ') : '' );
+			$arrayKey = $title->getArticleID() . ( ( $title->getFragment() ) ? '#' .
+																			   trim( $title->getFragment(), '_ ' ) : '' );
 
 			//Fetch all subject properties if config set to true
-			if( $this->config['fetch_all_properties'] ) {
-				if( $title->getFragment() ) {
+			if ( $this->config['fetch_all_properties'] ) {
+				if ( $title->getFragment() ) {
 					$properties = SemanticUtils::getSubobjectProperties( $title );
-				}else{
+				} else {
 					$properties = SemanticUtils::getPageProperties( $title->getText(), $title->getNamespace() );
 				}
-				if( $this->config['flat_prop_vals'] ) {
+				if ( $this->config['flat_prop_vals'] ) {
 					foreach ( $properties as &$property ) {
-						if( is_array($property) && count($property) ) {
+						if ( is_array( $property ) && count( $property ) ) {
 							$property = $property[0];
 						}
 					}
@@ -395,29 +417,32 @@ class SemanticQueryInterface {
 		//If there is something to "print"
 		$test = clone $this->result;
 		$check = $test->getNext();
-		if( $check !== false && count($check) ) {
+		if ( $check !== false && count( $check ) ) {
 			//We have something to "print"
 			//Copy result object to iterate
 			$result = clone $this->result;
 			/** @var \SMWResultArray[] $row */
-			while( $row = $result->getNext() ) {
+			while ( $row = $result->getNext() ) {
 				//Iterate through properties and subjects
-				foreach( $row as $rowItem ) {
+				foreach ( $row as $rowItem ) {
 					$subject = $rowItem->getResultSubject();
 
 					//TODO: There should be more beautiful way to form array keys ...
-					$arrayKey = $subject->getTitle()->getArticleID() . ( ($subject->getSubobjectName()) ? '#'.trim($subject->getSubobjectName(),'_ ') : '' );
+					$arrayKey = $subject->getTitle()->getArticleID() .
+								( ( $subject->getSubobjectName() ) ? '#' .
+																	 trim( $subject->getSubobjectName(), '_ ' ) : '' );
 
 					/** @var \SMWDataItem[] $propValues */
 					$propValues = $rowItem->getContent();
 					$propName = $rowItem->getPrintRequest()->getLabel();
-					$propName = SemanticUtils::dbKeyToString($propName);
-					foreach($propValues as $propValue) {
+					$propName = SemanticUtils::dbKeyToString( $propName );
+					foreach ( $propValues as $propValue ) {
 						$value = SemanticUtils::getPropertyValue( $propValue, $stringifyPropValues );
 						//If option enabled, flat every property except system arrays
-						if( $this->config['flat_prop_vals'] && $propName != 'Categories' && $propName != 'SubcategoryOf' ) {
+						if ( $this->config['flat_prop_vals'] && $propName != 'Categories' &&
+							 $propName != 'SubcategoryOf' ) {
 							$array[$arrayKey]['properties'][$propName] = $value;
-						}else{
+						} else {
 							$array[$arrayKey]['properties'][$propName][] = $value;
 						}
 					}
@@ -425,8 +450,8 @@ class SemanticQueryInterface {
 			}
 		}
 
-		if( $this->config['flat_result_array'] && count($array) ) {
-			return array_shift($array);
+		if ( $this->config['flat_result_array'] && count( $array ) ) {
+			return array_shift( $array );
 		}
 		return $array;
 
@@ -441,49 +466,48 @@ class SemanticQueryInterface {
 		$conditionDescriptions = array();
 
 		//Target page
-		if( $this->page !== null ) {
-			$page = new \SMWWikiPageValue('_wpg');
-			$page->setUserValue($this->page);
-			$pageDescription = new \SMWValueDescription( $page->getDataItem() );
+		if ( $this->page !== null ) {
+			$page = new \SMWDIWikiPage( $this->page, $this->namespace ); //new \SMWWikiPageValue( '_wpg' );
+			//$page->setUserValue( $this->page );
+			$pageDescription = new \SMWValueDescription( $page /*$page->getDataItem()*/ );
 			$conditionDescriptions[] = $pageDescription;
 		}
 
 		//Create category scope
-		if( count($this->categories) ) {
-			foreach($this->categories as $category) {
+		if ( count( $this->categories ) ) {
+			foreach ( $this->categories as $category ) {
 				$categoryTitle = new \SMWDIWikiPage( $category, NS_CATEGORY, '' );
-				$categoryDescription = new \SMWClassDescription($categoryTitle);
+				$categoryDescription = new \SMWClassDescription( $categoryTitle );
 				$conditionDescriptions[] = $categoryDescription;
 			}
 		}
 
 		//Create conditions array
-		foreach($this->conditions as $condition) {
-			$property = \SMWDIProperty::newFromUserLabel($condition[0]);
+		foreach ( $this->conditions as $condition ) {
+			$property = \SMWDIProperty::newFromUserLabel( $condition[0] );
 			$valueDescription = new \SMWThingDescription();
 
 			// Handle custom comparator value
 			$comparator = SMW_CMP_EQ;
-			if( count($condition) > 2 && $condition[2] !== null ) {
+			if ( count( $condition ) > 2 && $condition[2] !== null ) {
 				$comparator = $condition[2];
 			}
 
-			if( isset($condition[1]) ) {
+			if ( isset( $condition[1] ) ) {
 				//SMW >= 1.9
-				if( class_exists('SMW\DataValueFactory') )
-				{
+				if ( class_exists( 'SMW\DataValueFactory' ) ) {
 					// In some cases we will receive error probably because of PHP-version
 					$value = $this->newPropertyValue( $condition[0], $condition[1] );
-				}else{
-				//SMW < 1.9
-					$prop = \SMWDIProperty::newFromUserLabel($condition[0]);
+				} else {
+					//SMW < 1.9
+					$prop = \SMWDIProperty::newFromUserLabel( $condition[0] );
 					$value = \SMWDataValueFactory::newPropertyObjectValue( $prop, $condition[1] );
 				}
 				$valueDescription = new \SMWValueDescription( $value->getDataItem(), null, $comparator );
 			}
 			$description = new \SMWSomeProperty( $property, $valueDescription );
 			//Add condition properties to printouts
-			if(!in_array($condition[0],$this->printouts)) {
+			if ( !in_array( $condition[0], $this->printouts ) ) {
 				$this->printouts[] = $condition[0];
 			}
 			//Store description in conditions array
@@ -491,44 +515,44 @@ class SemanticQueryInterface {
 		}
 
 		//Build up query
-		if( count($conditionDescriptions) > 1 ) {
+		if ( count( $conditionDescriptions ) > 1 ) {
 			//Conjunction
 			$queryDescription = new \SMWConjunction( $conditionDescriptions );
-		}else{
+		} else {
 			//Simple
 			$queryDescription = $conditionDescriptions[0];
 		}
 
 		//Create printouts array if was not set
-		if( (count($this->printouts) == 0) && ($this->page !== null) ) {
+		if ( ( count( $this->printouts ) == 0 ) && ( $this->page !== null ) ) {
 			//Everything
 			$propList = SemanticUtils::getPageProperties( $this->page );
-			$propList = array_keys($propList);
+			$propList = array_keys( $propList );
 			$this->printouts = $propList;
 		}
 
 		//Add printouts to query
-		foreach( $this->printouts as $printout ) {
-			$printProp = \SMWPropertyValue::makeUserProperty($printout);
+		foreach ( $this->printouts as $printout ) {
+			$printProp = DataValueFactory::getInstance()->newPropertyValueByLabel( $printout );
 			$queryDescription->addPrintRequest( new \SMWPrintRequest( \SMWPrintRequest::PRINT_PROP, $printout, $printProp ) );
 		}
 
 		//If config variable set, fetch SMW system properties also
-		if( $this->config['fetch_default_properties'] ) {
+		if ( $this->config['fetch_default_properties'] ) {
 			//Fetch every subject categories
-			$printProp = \SMWPropertyValue::makeProperty('_INST');
+			$printProp = DataValueFactory::getInstance()->newPropertyValueByLabel( '_INST' );
 			$queryDescription->addPrintRequest( new \SMWPrintRequest( \SMWPrintRequest::PRINT_PROP, 'Categories', $printProp ) );
 			//Fetch every subject subcategory of
-			$printProp = \SMWPropertyValue::makeProperty('_SUBC');
+			$printProp = DataValueFactory::getInstance()->newPropertyValueByLabel( '_SUBC' );
 			$queryDescription->addPrintRequest( new \SMWPrintRequest( \SMWPrintRequest::PRINT_PROP, 'SubcategoryOf', $printProp ) );
 			//Fetch every subject modification date
-			$printProp = \SMWPropertyValue::makeProperty('_MDAT');
+			$printProp = DataValueFactory::getInstance()->newPropertyValueByLabel( '_MDAT' );
 			$queryDescription->addPrintRequest( new \SMWPrintRequest( \SMWPrintRequest::PRINT_PROP, 'ModificationDate', $printProp ) );
 			//Fetch every subject creation date
-			$printProp = \SMWPropertyValue::makeProperty('_CDAT');
+			$printProp = DataValueFactory::getInstance()->newPropertyValueByLabel( '_CDAT' );
 			$queryDescription->addPrintRequest( new \SMWPrintRequest( \SMWPrintRequest::PRINT_PROP, 'CreationDate', $printProp ) );
 			//Fetch every subject last editor user
-			$printProp = \SMWPropertyValue::makeProperty('_LEDT');
+			$printProp = DataValueFactory::getInstance()->newPropertyValueByLabel( '_LEDT' );
 			$queryDescription->addPrintRequest( new \SMWPrintRequest( \SMWPrintRequest::PRINT_PROP, 'LastEditor', $printProp ) );
 		}
 
@@ -539,8 +563,9 @@ class SemanticQueryInterface {
 	 * Merged from DataValueFactory
 	 */
 
-	public function newPropertyValue( $propertyName, $valueString,
-		$caption = false, \SMW\DIWikiPage $contextPage = null ) {
+	public function newPropertyValue(
+		$propertyName, $valueString, $caption = false, \SMW\DIWikiPage $contextPage = null
+	) {
 
 		// Enforce upper case for the first character on annotations that are used
 		// within the property namespace in order to avoid confusion when
@@ -549,56 +574,36 @@ class SemanticQueryInterface {
 			$propertyName = ucfirst( $propertyName );
 		}
 
-		$propertyDV = SMWPropertyValue::makeUserProperty( $propertyName );
+		$propertyDV = DataValueFactory::getInstance()->newPropertyValueByLabel( $propertyName );
 
 		if ( !$propertyDV->isValid() ) {
 			return $propertyDV;
 		}
 
 		if ( !$propertyDV->canUse() ) {
-			return new \SMW\ErrorValue(
-				$propertyDV->getPropertyTypeID(),
-				wfMessage( 'smw-datavalue-property-restricted-use', $propertyName )->inContentLanguage()->text(),
-				$valueString,
-				$caption
-			);
+			return new ErrorValue( $propertyDV->getPropertyTypeID(), wfMessage( 'smw-datavalue-property-restricted-use', $propertyName )
+				->inContentLanguage()->text(), $valueString, $caption );
 		}
 
 		$propertyDI = $propertyDV->getDataItem();
 
-		if ( $propertyDI instanceof \SMW\SMWDIError ) {
+		if ( $propertyDI instanceof SMWDIError ) {
 			return $propertyDV;
 		}
 
 		if ( $propertyDI instanceof \SMW\DIProperty && !$propertyDI->isInverse() ) {
-			$dataValue = DataValueFactory::newPropertyObjectValue(
-				$propertyDI,
-				$valueString,
-				$caption,
-				$contextPage
-			);
+			$dataValue = DataValueFactory::newPropertyObjectValue( $propertyDI, $valueString, $caption, $contextPage );
 		} elseif ( $propertyDI instanceof \SMW\DIProperty && $propertyDI->isInverse() ) {
-			$dataValue = new \SMW\ErrorValue( $propertyDV->getPropertyTypeID(),
-				wfMessage( 'smw_noinvannot' )->inContentLanguage()->text(),
-				$valueString,
-				$caption
-			);
+			$dataValue = new ErrorValue( $propertyDV->getPropertyTypeID(), wfMessage( 'smw_noinvannot' )
+				->inContentLanguage()->text(), $valueString, $caption );
 		} else {
-			$dataValue = new \SMW\ErrorValue(
-				$propertyDV->getPropertyTypeID(),
-				wfMessage( 'smw-property-name-invalid', $propertyName )->inContentLanguage()->text(),
-				$valueString,
-				$caption
-			);
+			$dataValue = new ErrorValue( $propertyDV->getPropertyTypeID(), wfMessage( 'smw-property-name-invalid', $propertyName )
+				->inContentLanguage()->text(), $valueString, $caption );
 		}
 
 		if ( $dataValue->isValid() && !$dataValue->canUse() ) {
-			$dataValue = new \SMW\ErrorValue(
-				$propertyDV->getPropertyTypeID(),
-				wfMessage( 'smw-datavalue-restricted-use', implode( ',', $datavalue->getErrors() ) )->inContentLanguage()->text(),
-				$valueString,
-				$caption
-			);
+			$dataValue = new ErrorValue( $propertyDV->getPropertyTypeID(), wfMessage( 'smw-datavalue-restricted-use', implode( ',', $dataValue->getErrors() ) )
+				->inContentLanguage()->text(), $valueString, $caption );
 		}
 
 		return $dataValue;
